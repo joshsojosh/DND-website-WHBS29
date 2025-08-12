@@ -401,8 +401,11 @@ p {
     border-radius: var(--border-radius-lg);
     width: 90%;
     max-width: 600px;
+    max-height: 85vh;
     box-shadow: var(--shadow-lg);
     border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
 }
 
 .modal-header {
@@ -432,6 +435,8 @@ p {
 
 .modal-body {
     padding: var(--spacing-lg);
+    overflow-y: auto;
+    flex: 1;
 }
 
 /* Form Styles */

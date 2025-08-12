@@ -172,7 +172,8 @@
         margin: 10% auto;
         width: 95%;
         max-height: 80vh;
-        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
     }
     
     .modal-header {
@@ -185,6 +186,8 @@
     
     .modal-body {
         padding: var(--spacing-md);
+        overflow-y: auto;
+        flex: 1;
     }
     
     .upload-zone {
@@ -373,4 +376,3 @@
     /* Keep dark theme as default for D&D aesthetic */
     /* Users can override with a toggle if needed */
 }
-
