@@ -4,6 +4,75 @@
 const STORAGE_KEY = 'dragon_library_books';
 const SETTINGS_KEY = 'dragon_library_settings';
 
+// Core D&D books that come pre-loaded
+const CORE_BOOKS = [
+    {
+        id: 'core_players_handbook',
+        title: "Player's Handbook",
+        category: 'Core Rules',
+        description: 'The essential rulebook for players, containing character creation rules, spells, equipment, and gameplay mechanics.',
+        fileName: 'players_handbook.pdf',
+        fileSize: 0, // Will be set when actual file is loaded
+        fileData: null, // Placeholder - will be loaded from external source
+        dateAdded: new Date().toISOString(),
+        lastAccessed: null,
+        accessCount: 0,
+        tags: ['core', 'rules', 'character creation', 'spells', 'equipment'],
+        isCore: true,
+        downloadUrl: 'https://example.com/players_handbook.pdf' // Placeholder URL
+    },
+    {
+        id: 'core_xanathars_guide',
+        title: "Xanathar's Guide to Everything",
+        category: 'Supplements',
+        description: 'Expanded character options, spells, and DM tools. Includes new subclasses, spells, and optional rules.',
+        fileName: 'xanathars_guide_to_everything.pdf',
+        fileSize: 0,
+        fileData: null,
+        dateAdded: new Date().toISOString(),
+        lastAccessed: null,
+        accessCount: 0,
+        tags: ['supplement', 'character options', 'spells', 'subclasses', 'expanded rules'],
+        isCore: true,
+        downloadUrl: 'https://example.com/xanathars_guide.pdf' // Placeholder URL
+    },
+    {
+        id: 'core_tashas_cauldron',
+        title: "Tasha's Cauldron of Everything",
+        category: 'Supplements',
+        description: 'The latest character options and variant rules. Features new subclasses, spells, and customization options.',
+        fileName: 'tashas_cauldron_of_everything.pdf',
+        fileSize: 0,
+        fileData: null,
+        dateAdded: new Date().toISOString(),
+        lastAccessed: null,
+        accessCount: 0,
+        tags: ['supplement', 'character options', 'variant rules', 'subclasses', 'customization'],
+        isCore: true,
+        downloadUrl: 'https://example.com/tashas_cauldron.pdf' // Placeholder URL
+    }
+];
+
+// Initialize core books in storage
+function initializeCoreBooks() {
+    const books = getStoredBooks();
+    let booksAdded = false;
+    
+    CORE_BOOKS.forEach(coreBook => {
+        // Check if this core book already exists
+        const existingBook = books.find(book => book.id === coreBook.id);
+        if (!existingBook) {
+            books.push(coreBook);
+            booksAdded = true;
+        }
+    });
+    
+    if (booksAdded) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
+        console.log('Core D&D books initialized in library');
+    }
+}
+
 // Initialize storage
 function initializeStorage() {
     if (!localStorage.getItem(STORAGE_KEY)) {
@@ -20,6 +89,9 @@ function initializeStorage() {
         };
         localStorage.setItem(SETTINGS_KEY, JSON.stringify(defaultSettings));
     }
+    
+    // Initialize core books
+    initializeCoreBooks();
 }
 
 // Get all stored books
@@ -176,6 +248,24 @@ function searchBooks(query, filters = {}) {
 function getBooksByCategory(category) {
     const books = getStoredBooks();
     return books.filter(book => book.category === category);
+}
+
+// Get core books
+function getCoreBooks() {
+    const books = getStoredBooks();
+    return books.filter(book => book.isCore === true);
+}
+
+// Get user-uploaded books (non-core)
+function getUserBooks() {
+    const books = getStoredBooks();
+    return books.filter(book => !book.isCore);
+}
+
+// Check if core books are available
+function areCoreeBooksAvailable() {
+    const coreBooks = getCoreBooks();
+    return coreBooks.length === CORE_BOOKS.length;
 }
 
 // Get recently accessed books
@@ -378,6 +468,9 @@ window.DragonLibraryStorage = {
     removeBookFromStorage,
     searchBooks,
     getBooksByCategory,
+    getCoreBooks,
+    getUserBooks,
+    areCoreeBooksAvailable,
     getRecentlyAccessedBooks,
     trackBookAccess,
     getStorageStats,
@@ -388,4 +481,3 @@ window.DragonLibraryStorage = {
     clearAllData,
     checkStorageQuota
 };
-

@@ -175,9 +175,9 @@ function displayBooks() {
 // Create book card HTML for grid view
 function createBookCardHTML(book) {
     const categoryColors = {
-        'core-rules': '#8B0000',
+        'Core Rules': '#8B0000',
         'adventures': '#4B0082',
-        'supplements': '#228B22',
+        'Supplements': '#228B22',
         'homebrew': '#FF8C00',
         'reference': '#DAA520',
         'other': '#666666'
@@ -185,36 +185,57 @@ function createBookCardHTML(book) {
     
     const categoryColor = categoryColors[book.category] || categoryColors.other;
     const isSelected = selectedBooks.has(book.id);
+    const isCore = book.isCore === true;
+    
+    // Core books have special styling and limited actions
+    const coreBookBadge = isCore ? '<div class="core-book-badge"><i class="fas fa-star"></i> Core Book</div>' : '';
+    const coreBookClass = isCore ? 'core-book' : '';
+    
+    // Core books don't show delete button and have different actions
+    const bookActions = isCore ? `
+        <button class="btn-icon" onclick="viewCoreBook('${book.id}')" title="View Core Book">
+            <i class="fas fa-eye"></i>
+        </button>
+        <button class="btn-icon" onclick="downloadCoreBook('${book.id}')" title="Download Core Book">
+            <i class="fas fa-download"></i>
+        </button>
+        <button class="btn-icon" onclick="showCoreBookInfo('${book.id}')" title="Book Information">
+            <i class="fas fa-info-circle"></i>
+        </button>
+    ` : `
+        <button class="btn-icon" onclick="viewBook('${book.id}')" title="View Book">
+            <i class="fas fa-eye"></i>
+        </button>
+        <button class="btn-icon" onclick="downloadBook('${book.id}')" title="Download">
+            <i class="fas fa-download"></i>
+        </button>
+        <button class="btn-icon" onclick="editBook('${book.id}')" title="Edit">
+            <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn-icon delete" onclick="deleteBook('${book.id}')" title="Delete">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
     
     return `
-        <div class="book-card ${isSelected ? 'selected' : ''}" data-book-id="${book.id}">
+        <div class="book-card ${isSelected ? 'selected' : ''} ${coreBookClass}" data-book-id="${book.id}">
+            ${coreBookBadge}
             <div class="book-select">
                 <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleBookSelection('${book.id}')">
             </div>
             <div class="book-thumbnail" style="background-color: ${categoryColor}">
-                <i class="fas fa-book"></i>
+                <i class="fas ${isCore ? 'fa-star' : 'fa-book'}"></i>
             </div>
             <div class="book-info">
                 <div class="book-title">${escapeHtml(book.title)}</div>
                 <div class="book-category">${formatCategory(book.category)}</div>
                 <div class="book-meta">
-                    <span class="book-size">${formatFileSize(book.fileSize)}</span>
+                    <span class="book-size">${isCore ? 'Core Book' : formatFileSize(book.fileSize)}</span>
                     <span class="book-date">${formatDate(book.dateAdded)}</span>
                 </div>
             </div>
             <div class="book-actions">
-                <button class="btn-icon" onclick="viewBook('${book.id}')" title="View Book">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button class="btn-icon" onclick="downloadBook('${book.id}')" title="Download">
-                    <i class="fas fa-download"></i>
-                </button>
-                <button class="btn-icon" onclick="editBook('${book.id}')" title="Edit">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn-icon delete" onclick="deleteBook('${book.id}')" title="Delete">
-                    <i class="fas fa-trash"></i>
-                </button>
+                ${bookActions}
             </div>
         </div>
     `;
@@ -223,37 +244,58 @@ function createBookCardHTML(book) {
 // Create book list item HTML for list view
 function createBookListItemHTML(book) {
     const isSelected = selectedBooks.has(book.id);
+    const isCore = book.isCore === true;
+    const coreBookClass = isCore ? 'core-book' : '';
+    const coreBookBadge = isCore ? '<span class="core-badge"><i class="fas fa-star"></i> Core</span>' : '';
+    
+    // Core books have different actions
+    const bookActions = isCore ? `
+        <button class="btn-icon" onclick="viewCoreBook('${book.id}')" title="View Core Book">
+            <i class="fas fa-eye"></i>
+        </button>
+        <button class="btn-icon" onclick="downloadCoreBook('${book.id}')" title="Download Core Book">
+            <i class="fas fa-download"></i>
+        </button>
+        <button class="btn-icon" onclick="showCoreBookInfo('${book.id}')" title="Book Information">
+            <i class="fas fa-info-circle"></i>
+        </button>
+    ` : `
+        <button class="btn-icon" onclick="viewBook('${book.id}')" title="View Book">
+            <i class="fas fa-eye"></i>
+        </button>
+        <button class="btn-icon" onclick="downloadBook('${book.id}')" title="Download">
+            <i class="fas fa-download"></i>
+        </button>
+        <button class="btn-icon" onclick="editBook('${book.id}')" title="Edit">
+            <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn-icon delete" onclick="deleteBook('${book.id}')" title="Delete">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
     
     return `
-        <div class="book-list-item ${isSelected ? 'selected' : ''}" data-book-id="${book.id}">
+        <div class="book-list-item ${isSelected ? 'selected' : ''} ${coreBookClass}" data-book-id="${book.id}">
             <div class="book-select">
                 <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleBookSelection('${book.id}')">
             </div>
             <div class="book-icon">
-                <i class="fas fa-file-pdf"></i>
+                <i class="fas ${isCore ? 'fa-star' : 'fa-file-pdf'}"></i>
             </div>
             <div class="book-details">
-                <div class="book-title">${escapeHtml(book.title)}</div>
+                <div class="book-title">
+                    ${escapeHtml(book.title)}
+                    ${coreBookBadge}
+                </div>
                 <div class="book-meta">
                     <span class="book-category">${formatCategory(book.category)}</span>
-                    <span class="book-size">${formatFileSize(book.fileSize)}</span>
+                    <span class="book-size">${isCore ? 'Core Book' : formatFileSize(book.fileSize)}</span>
                     <span class="book-date">${formatDate(book.dateAdded)}</span>
                 </div>
                 ${book.description ? `<div class="book-description">${escapeHtml(book.description)}</div>` : ''}
             </div>
             <div class="book-actions">
-                <button class="btn-icon" onclick="viewBook('${book.id}')" title="View Book">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button class="btn-icon" onclick="downloadBook('${book.id}')" title="Download">
-                    <i class="fas fa-download"></i>
-                </button>
-                <button class="btn-icon" onclick="editBook('${book.id}')" title="Edit">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn-icon delete" onclick="deleteBook('${book.id}')" title="Delete">
-                    <i class="fas fa-trash"></i>
-                </button>
+                ${bookActions}
             </div>
         </div>
     `;
@@ -677,6 +719,130 @@ function debounce(func, wait) {
     };
 }
 
+// ===== CORE BOOK FUNCTIONS =====
+
+// View core book (placeholder - would need actual PDF URLs)
+function viewCoreBook(bookId) {
+    const book = getBookById(bookId);
+    if (!book) return;
+    
+    showNotification(`Core book "${book.title}" viewing is not yet implemented. This would open the official PDF.`, 'info');
+    trackBookAccess(bookId);
+}
+
+// Download core book (placeholder - would need actual PDF URLs)
+function downloadCoreBook(bookId) {
+    const book = getBookById(bookId);
+    if (!book) return;
+    
+    showNotification(`Core book "${book.title}" download is not yet implemented. This would download the official PDF.`, 'info');
+    
+    // In a real implementation, this would:
+    // 1. Check if user has legal access to the book
+    // 2. Download from official D&D Beyond or other authorized source
+    // 3. Or redirect to purchase page if not owned
+}
+
+// Show core book information
+function showCoreBookInfo(bookId) {
+    const book = getBookById(bookId);
+    if (!book) return;
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-star"></i> ${escapeHtml(book.title)}</h3>
+                <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="core-book-info">
+                    <div class="book-badge">
+                        <i class="fas fa-star"></i>
+                        <span>Official D&D Core Book</span>
+                    </div>
+                    
+                    <div class="book-details">
+                        <p><strong>Category:</strong> ${book.category}</p>
+                        <p><strong>Description:</strong> ${book.description}</p>
+                        <p><strong>Tags:</strong> ${book.tags ? book.tags.join(', ') : 'None'}</p>
+                    </div>
+                    
+                    <div class="core-book-features">
+                        <h4>What's Included:</h4>
+                        <ul>
+                            ${getCoreBookFeatures(bookId).map(feature => `<li>${feature}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="core-book-notice">
+                        <p><i class="fas fa-info-circle"></i> This is a pre-loaded core D&D book for your convenience. 
+                        To access the full content, you'll need to own the official book or have a D&D Beyond subscription.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Close</button>
+                <button class="btn btn-primary" onclick="openDnDBeyond('${bookId}')">
+                    <i class="fas fa-external-link-alt"></i> View on D&D Beyond
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    modal.style.display = 'block';
+}
+
+// Get features for each core book
+function getCoreBookFeatures(bookId) {
+    const features = {
+        'core_players_handbook': [
+            'Complete character creation rules',
+            'All 12 core classes with subclasses',
+            'Spells for all spellcasting classes',
+            'Equipment, weapons, and armor',
+            'Core gameplay mechanics',
+            'Adventuring rules and conditions'
+        ],
+        'core_xanathars_guide': [
+            'Additional subclasses for all classes',
+            'Expanded spell lists',
+            'Optional class features',
+            'Tool proficiencies and downtime activities',
+            'DM tools and encounter building',
+            'Random tables for character creation'
+        ],
+        'core_tashas_cauldron': [
+            'Latest character options and variants',
+            'Customizable racial traits',
+            'Additional spells and cantrips',
+            'Optional class features',
+            'Magical tattoos and group patrons',
+            'Puzzles and supernatural regions'
+        ]
+    };
+    
+    return features[bookId] || ['Core D&D content'];
+}
+
+// Open D&D Beyond page for the book
+function openDnDBeyond(bookId) {
+    const dndbeyondUrls = {
+        'core_players_handbook': 'https://www.dndbeyond.com/sources/phb',
+        'core_xanathars_guide': 'https://www.dndbeyond.com/sources/xgte',
+        'core_tashas_cauldron': 'https://www.dndbeyond.com/sources/tcoe'
+    };
+    
+    const url = dndbeyondUrls[bookId];
+    if (url) {
+        window.open(url, '_blank');
+    } else {
+        showNotification('D&D Beyond link not available for this book', 'error');
+    }
+}
+
 // Export functions for global use
 window.DragonLibraryPage = {
     refreshLibrary,
@@ -693,4 +859,3 @@ window.DragonLibraryPage = {
     exportLibrary,
     importLibrary
 };
-
