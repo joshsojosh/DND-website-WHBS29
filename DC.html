@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Rolling Application</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎲 Dice Rolling Application</h1>
+        
+        <div class="dice-input-section">
+            <h2>Add Dice to Roll</h2>
+            <div class="input-group">
+                <label for="diceCount">Number of Dice:</label>
+                <input type="number" id="diceCount" min="1" max="20" value="1">
+                
+                <label for="diceSides">Sides per Die:</label>
+                <select id="diceSides">
+                    <option value="4">4-sided (d4)</option>
+                    <option value="6" selected>6-sided (d6)</option>
+                    <option value="8">8-sided (d8)</option>
+                    <option value="10">10-sided (d10)</option>
+                    <option value="12">12-sided (d12)</option>
+                    <option value="20">20-sided (d20)</option>
+                    <option value="100">100-sided (d100)</option>
+                </select>
+                
+                <button id="addDice">Add Dice</button>
+            </div>
+        </div>
+
+        <div class="dice-collection">
+            <h2>Dice Collection</h2>
+            <div id="diceList" class="dice-list">
+                <p class="empty-message">No dice added yet. Add some dice above!</p>
+            </div>
+            <div class="collection-actions">
+                <button id="rollAll" class="roll-button" disabled>🎲 Roll All Dice</button>
+                <button id="clearAll" class="clear-button">Clear All</button>
+            </div>
+        </div>
+
+        <div class="results-section">
+            <h2>Roll Results</h2>
+            <div id="results" class="results">
+                <p class="empty-message">Roll some dice to see results!</p>
+            </div>
+            <div class="total-section">
+                <h3>Grand Total: <span id="grandTotal">0</span></h3>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
