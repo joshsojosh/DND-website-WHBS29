@@ -621,7 +621,13 @@ function performExport() {
             exportAsJSON();
             break;
         case 'pdf':
-            exportAsPDF();
+            exportAsPDF('standard');
+            break;
+        case 'pdf-spell':
+            exportAsPDF('spell');
+            break;
+        case 'pdf-compact':
+            exportAsPDF('compact');
             break;
         case 'txt':
             exportAsText();
@@ -687,10 +693,36 @@ Generated: ${new Date(currentCharacter.createdAt).toLocaleString()}
     showNotification('Character exported as text file', 'success');
 }
 
-function exportAsPDF() {
-    // This would require a PDF library like jsPDF
-    // For now, we'll show a message
-    showNotification('PDF export coming soon! Use text export for now.', 'info');
+function exportAsPDF(type = 'standard') {
+    if (!currentCharacter) {
+        showNotification('No character to export', 'error');
+        return;
+    }
+    
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        switch (type) {
+            case 'standard':
+                generateStandardCharacterSheet(doc);
+                break;
+            case 'spell':
+                generateSpellSheet(doc);
+                break;
+            case 'compact':
+                generateCompactSheet(doc);
+                break;
+        }
+        
+        const filename = `${currentCharacter.name.replace(/\s+/g, '_')}_${type}_sheet.pdf`;
+        doc.save(filename);
+        showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} character sheet exported!`, 'success');
+        
+    } catch (error) {
+        console.error('PDF export error:', error);
+        showNotification('Error generating PDF. Please try again.', 'error');
+    }
 }
 
 function saveCharacterTemplate() {
@@ -1317,4 +1349,248 @@ function getStartingEquipment(charClass, background) {
         `${charClass.charAt(0).toUpperCase() + charClass.slice(1)} equipment`,
         `${background.charAt(0).toUpperCase() + background.slice(1)} kit`
     ];
+}
+
+// ===== PDF GENERATION FUNCTIONS =====
+
+function generateStandardCharacterSheet(doc) {
+    const char = currentCharacter;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    
+    // Title
+    doc.setFontSize(20);
+    doc.setFont(undefined, 'bold');
+    doc.text('D&D 5e Character Sheet', pageWidth / 2, 20, { align: 'center' });
+    
+    // Character Name and Basic Info
+    doc.setFontSize(16);
+    doc.text(char.name || 'Unnamed Character', pageWidth / 2, 35, { align: 'center' });
+    
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'normal');
+    const basicInfo = `Level ${char.level || 1} ${char.race || 'Unknown'} ${char.class || 'Unknown'}`;
+    doc.text(basicInfo, pageWidth / 2, 45, { align: 'center' });
+    
+    if (char.background) {
+        doc.text(`Background: ${char.background}`, pageWidth / 2, 55, { align: 'center' });
+    }
+    
+    // Ability Scores Section
+    let yPos = 75;
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('ABILITY SCORES', 20, yPos);
+    
+    yPos += 10;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    
+    const abilities = char.abilities || char.stats || {};
+    const abilityNames = ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
+    const abilityKeys = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+    
+    // Draw ability scores in a grid
+    const colWidth = 30;
+    const startX = 20;
+    
+    abilityNames.forEach((name, index) => {
+        const x = startX + (index % 3) * (colWidth + 10);
+        const y = yPos + Math.floor(index / 3) * 25;
+        
+        const score = abilities[abilityKeys[index]] || 10;
+        const modifier = Math.floor((score - 10) / 2);
+        const modStr = modifier >= 0 ? `+${modifier}` : `${modifier}`;
+        
+        // Draw box
+        doc.rect(x, y, colWidth, 20);
+        
+        // Ability name
+        doc.setFontSize(8);
+        doc.text(name.substring(0, 3).toUpperCase(), x + colWidth/2, y - 2, { align: 'center' });
+        
+        // Score
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text(score.toString(), x + colWidth/2, y + 8, { align: 'center' });
+        
+        // Modifier
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text(modStr, x + colWidth/2, y + 16, { align: 'center' });
+    });
+    
+    // Combat Stats
+    yPos += 60;
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('COMBAT STATS', 20, yPos);
+    
+    yPos += 15;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    
+    const combat = char.combat || {};
+    const profBonus = combat.proficiencyBonus || Math.ceil((char.level || 1) / 4) + 1;
+    
+    doc.text(`Armor Class: ${combat.armorClass || 10}`, 20, yPos);
+    doc.text(`Hit Points: ${combat.hitPoints || 8}`, 20, yPos + 10);
+    doc.text(`Speed: ${combat.speed || 30} ft`, 20, yPos + 20);
+    doc.text(`Proficiency Bonus: +${profBonus}`, 20, yPos + 30);
+    doc.text(`Hit Die: ${combat.hitDie || '1d8'}`, 20, yPos + 40);
+    
+    // Skills and Proficiencies
+    yPos += 60;
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('SKILLS & PROFICIENCIES', 20, yPos);
+    
+    yPos += 15;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    
+    if (char.skills && char.skills.length > 0) {
+        doc.text('Skills:', 20, yPos);
+        yPos += 10;
+        char.skills.forEach((skill, index) => {
+            if (yPos > pageHeight - 30) {
+                doc.addPage();
+                yPos = 30;
+            }
+            doc.text(`• ${skill}`, 25, yPos);
+            yPos += 8;
+        });
+    }
+    
+    // Add remaining sections on next page if needed
+    addCharacterDetailsToSheet(doc, char, yPos, pageWidth, pageHeight);
+}
+
+function addCharacterDetailsToSheet(doc, char, startY, pageWidth, pageHeight) {
+    let yPos = startY;
+    
+    // Features and Traits
+    yPos += 10;
+    if (yPos > pageHeight - 50) {
+        doc.addPage();
+        yPos = 30;
+    }
+    
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('FEATURES & TRAITS', 20, yPos);
+    
+    yPos += 15;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    
+    if (char.features && char.features.length > 0) {
+        char.features.forEach((feature, index) => {
+            if (yPos > pageHeight - 20) {
+                doc.addPage();
+                yPos = 30;
+            }
+            doc.text(`• ${feature}`, 20, yPos);
+            yPos += 8;
+        });
+    }
+    
+    // Equipment
+    yPos += 10;
+    if (yPos > pageHeight - 50) {
+        doc.addPage();
+        yPos = 30;
+    }
+    
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('EQUIPMENT', 20, yPos);
+    
+    yPos += 15;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    
+    if (char.equipment && char.equipment.length > 0) {
+        char.equipment.forEach((item, index) => {
+            if (yPos > pageHeight - 20) {
+                doc.addPage();
+                yPos = 30;
+            }
+            doc.text(`• ${item}`, 20, yPos);
+            yPos += 8;
+        });
+    }
+    
+    // Personality and Backstory
+    if (char.personality || char.backstory) {
+        yPos += 10;
+        if (yPos > pageHeight - 80) {
+            doc.addPage();
+            yPos = 30;
+        }
+        
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text('CHARACTER DETAILS', 20, yPos);
+        
+        yPos += 15;
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        
+        if (char.personality) {
+            if (typeof char.personality === 'object') {
+                if (char.personality.traits) {
+                    doc.text('Personality Traits:', 20, yPos);
+                    yPos += 8;
+                    const traits = doc.splitTextToSize(char.personality.traits, pageWidth - 40);
+                    doc.text(traits, 25, yPos);
+                    yPos += traits.length * 5 + 5;
+                }
+                
+                if (char.personality.ideals) {
+                    doc.text('Ideals:', 20, yPos);
+                    yPos += 8;
+                    const ideals = doc.splitTextToSize(char.personality.ideals, pageWidth - 40);
+                    doc.text(ideals, 25, yPos);
+                    yPos += ideals.length * 5 + 5;
+                }
+                
+                if (char.personality.bonds) {
+                    doc.text('Bonds:', 20, yPos);
+                    yPos += 8;
+                    const bonds = doc.splitTextToSize(char.personality.bonds, pageWidth - 40);
+                    doc.text(bonds, 25, yPos);
+                    yPos += bonds.length * 5 + 5;
+                }
+                
+                if (char.personality.flaws) {
+                    doc.text('Flaws:', 20, yPos);
+                    yPos += 8;
+                    const flaws = doc.splitTextToSize(char.personality.flaws, pageWidth - 40);
+                    doc.text(flaws, 25, yPos);
+                    yPos += flaws.length * 5 + 5;
+                }
+                
+                if (char.personality.backstory || char.backstory) {
+                    doc.text('Backstory:', 20, yPos);
+                    yPos += 8;
+                    const backstory = doc.splitTextToSize(char.personality.backstory || char.backstory, pageWidth - 40);
+                    doc.text(backstory, 25, yPos);
+                    yPos += backstory.length * 5;
+                }
+            } else {
+                doc.text('Personality:', 20, yPos);
+                yPos += 8;
+                const personality = doc.splitTextToSize(char.personality, pageWidth - 40);
+                doc.text(personality, 25, yPos);
+                yPos += personality.length * 5;
+            }
+        }
+    }
+    
+    // Footer
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'italic');
+    const footer = `Generated by Dragon's Library on ${new Date().toLocaleDateString()}`;
+    doc.text(footer, pageWidth / 2, pageHeight - 10, { align: 'center' });
 }

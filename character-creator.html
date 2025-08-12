@@ -639,8 +639,24 @@
                             <input type="radio" name="exportFormat" value="pdf">
                             <span class="export-card">
                                 <i class="fas fa-file-pdf"></i>
-                                <strong>PDF</strong>
-                                <small>Printable sheet</small>
+                                <strong>D&D 5e Sheet</strong>
+                                <small>Official character sheet</small>
+                            </span>
+                        </label>
+                        <label class="export-option">
+                            <input type="radio" name="exportFormat" value="pdf-spell">
+                            <span class="export-card">
+                                <i class="fas fa-magic"></i>
+                                <strong>Spell Sheet</strong>
+                                <small>For spellcasters</small>
+                            </span>
+                        </label>
+                        <label class="export-option">
+                            <input type="radio" name="exportFormat" value="pdf-compact">
+                            <span class="export-card">
+                                <i class="fas fa-compress-alt"></i>
+                                <strong>Compact Sheet</strong>
+                                <small>Essential info only</small>
                             </span>
                         </label>
                         <label class="export-option">
@@ -672,8 +688,12 @@
         </div>
     </footer>
 
+    <!-- PDF Generation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
     <script src="js/main.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/character-creator.js"></script>
+    <script src="js/pdf-generators.js"></script>
 </body>
 </html>
