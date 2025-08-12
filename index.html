@@ -1,6 +1,163 @@
 <!DOCTYPE html>
-<html>
-  <Body>
-    <h1> "Hello World! </h1>
-  </Body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon's Library - D&D Group Hub</title>
+    <meta name="description" content="A digital library and hub for our D&D group's books, campaigns, and adventures">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <header class="main-header">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <i class="fas fa-dragon"></i>
+                <h1>Dragon's Library</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link active"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="library.html" class="nav-link"><i class="fas fa-book"></i> Library</a></li>
+                <li><a href="campaigns.html" class="nav-link"><i class="fas fa-map"></i> Campaigns</a></li>
+                <li><a href="characters.html" class="nav-link"><i class="fas fa-users"></i> Characters</a></li>
+                <li><a href="sessions.html" class="nav-link"><i class="fas fa-dice-d20"></i> Sessions</a></li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section class="hero-section">
+            <div class="hero-content">
+                <h2>Welcome to Your D&D Adventure Hub</h2>
+                <p>Manage your PDF books, track campaigns, and organize your tabletop adventures all in one place.</p>
+                <div class="hero-buttons">
+                    <a href="library.html" class="btn btn-primary">
+                        <i class="fas fa-book-open"></i> Browse Library
+                    </a>
+                    <button class="btn btn-secondary" onclick="openUploadModal()">
+                        <i class="fas fa-upload"></i> Upload Book
+                    </button>
+                </div>
+            </div>
+            <div class="hero-image">
+                <i class="fas fa-dungeon hero-icon"></i>
+            </div>
+        </section>
+
+        <section class="features-section">
+            <div class="container">
+                <h3>Manage Your D&D Collection</h3>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-file-pdf"></i>
+                        <h4>PDF Library</h4>
+                        <p>Upload and organize your D&D books, adventures, and reference materials in PDF format.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-search"></i>
+                        <h4>Smart Search</h4>
+                        <p>Quickly find the books you need with powerful search and filtering capabilities.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-tags"></i>
+                        <h4>Categories</h4>
+                        <p>Organize books by type: Core Rules, Adventures, Supplements, Homebrew, and more.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-mobile-alt"></i>
+                        <h4>Mobile Friendly</h4>
+                        <p>Access your library from any device - perfect for quick rule lookups during sessions.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="recent-books">
+            <div class="container">
+                <h3>Recently Added Books</h3>
+                <div id="recent-books-grid" class="books-grid">
+                    <!-- Recent books will be populated by JavaScript -->
+                </div>
+                <div class="empty-state" id="empty-library">
+                    <i class="fas fa-book-open"></i>
+                    <h4>No books yet!</h4>
+                    <p>Start building your D&D library by uploading your first PDF book.</p>
+                    <button class="btn btn-primary" onclick="openUploadModal()">
+                        <i class="fas fa-plus"></i> Add Your First Book
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-upload"></i> Upload PDF Book</h3>
+                <span class="close" onclick="closeUploadModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="upload-zone" id="uploadZone">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Drag and drop your PDF here, or click to select</p>
+                        <input type="file" id="pdfFile" accept=".pdf" hidden>
+                        <button type="button" class="btn btn-outline" onclick="document.getElementById('pdfFile').click()">
+                            Choose File
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bookTitle">Book Title *</label>
+                        <input type="text" id="bookTitle" required placeholder="e.g., Player's Handbook">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bookCategory">Category</label>
+                        <select id="bookCategory">
+                            <option value="core-rules">Core Rules</option>
+                            <option value="adventures">Adventures</option>
+                            <option value="supplements">Supplements</option>
+                            <option value="homebrew">Homebrew</option>
+                            <option value="reference">Reference</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bookDescription">Description</label>
+                        <textarea id="bookDescription" placeholder="Brief description of the book..."></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeUploadModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Upload Book
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <p>&copy; 2024 Dragon's Library - Your D&D Adventure Hub</p>
+            <div class="footer-links">
+                <a href="#"><i class="fas fa-dice-d20"></i> Roll Initiative</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/upload.js"></script>
+    <script src="js/storage.js"></script>
+</body>
 </html>
