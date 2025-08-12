@@ -111,10 +111,10 @@ function handleFiles(files) {
         return;
     }
     
-    // Validate file size (limit to 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    // Validate file size (limit to 250MB)
+    const maxSize = 250 * 1024 * 1024; // 250MB
     if (file.size > maxSize) {
-        showNotification('File size must be less than 10MB.', 'error');
+        showNotification('File size must be less than 250MB.', 'error');
         return;
     }
     
@@ -364,9 +364,9 @@ function validatePDFFile(file) {
     }
     
     // Check file size
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    const maxSize = 250 * 1024 * 1024; // 250MB
     if (file.size > maxSize) {
-        errors.push('File size must be less than 10MB');
+        errors.push('File size must be less than 250MB');
     }
     
     // Check file name
@@ -450,4 +450,3 @@ window.DragonLibraryUpload = {
     handleBatchUpload,
     validatePDFFile
 };
-

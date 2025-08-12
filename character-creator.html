@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Character Creator - Dragon's Library</title>
+    <meta name="description" content="Create D&D characters with AI assistance using your book collection">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <header class="main-header">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <i class="fas fa-dragon"></i>
+                <h1>Dragon's Library</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="library.html" class="nav-link"><i class="fas fa-book"></i> Library</a></li>
+                <li><a href="character-creator.html" class="nav-link active"><i class="fas fa-magic"></i> AI Creator</a></li>
+                <li><a href="campaigns.html" class="nav-link"><i class="fas fa-map"></i> Campaigns</a></li>
+                <li><a href="characters.html" class="nav-link"><i class="fas fa-users"></i> Characters</a></li>
+                <li><a href="sessions.html" class="nav-link"><i class="fas fa-dice-d20"></i> Sessions</a></li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section class="creator-header">
+            <div class="container">
+                <div class="creator-title">
+                    <h2><i class="fas fa-magic"></i> AI Character Creator</h2>
+                    <p>Create unique D&D characters powered by your book collection</p>
+                </div>
+                <div class="creator-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-book"></i>
+                        <span id="availableBooks">0</span>
+                        <small>Books Available</small>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-brain"></i>
+                        <span id="aiStatus">Ready</span>
+                        <small>AI Status</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="creator-content">
+            <div class="container">
+                <div class="creator-layout">
+                    <!-- Left Panel - Creation Options -->
+                    <div class="creator-panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-cogs"></i> Character Parameters</h3>
+                            <button class="btn btn-outline btn-sm" onclick="randomizeAll()">
+                                <i class="fas fa-random"></i> Randomize All
+                            </button>
+                        </div>
+
+                        <div class="creation-form">
+                            <div class="form-section">
+                                <h4>Basic Information</h4>
+                                <div class="form-group">
+                                    <label for="characterName">Character Name</label>
+                                    <div class="input-with-button">
+                                        <input type="text" id="characterName" placeholder="Leave blank for AI suggestion">
+                                        <button type="button" class="btn-icon" onclick="generateName()" title="Generate Name">
+                                            <i class="fas fa-magic"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="characterRace">Race</label>
+                                        <select id="characterRace" onchange="updateAvailableOptions()">
+                                            <option value="random">🎲 AI Choice</option>
+                                            <option value="human">Human</option>
+                                            <option value="elf">Elf</option>
+                                            <option value="dwarf">Dwarf</option>
+                                            <option value="halfling">Halfling</option>
+                                            <option value="dragonborn">Dragonborn</option>
+                                            <option value="gnome">Gnome</option>
+                                            <option value="half-elf">Half-Elf</option>
+                                            <option value="half-orc">Half-Orc</option>
+                                            <option value="tiefling">Tiefling</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="characterClass">Class</label>
+                                        <select id="characterClass" onchange="updateAvailableOptions()">
+                                            <option value="random">🎲 AI Choice</option>
+                                            <option value="barbarian">Barbarian</option>
+                                            <option value="bard">Bard</option>
+                                            <option value="cleric">Cleric</option>
+                                            <option value="druid">Druid</option>
+                                            <option value="fighter">Fighter</option>
+                                            <option value="monk">Monk</option>
+                                            <option value="paladin">Paladin</option>
+                                            <option value="ranger">Ranger</option>
+                                            <option value="rogue">Rogue</option>
+                                            <option value="sorcerer">Sorcerer</option>
+                                            <option value="warlock">Warlock</option>
+                                            <option value="wizard">Wizard</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="characterBackground">Background</label>
+                                    <select id="characterBackground">
+                                        <option value="random">🎲 AI Choice</option>
+                                        <option value="acolyte">Acolyte</option>
+                                        <option value="criminal">Criminal</option>
+                                        <option value="folk-hero">Folk Hero</option>
+                                        <option value="noble">Noble</option>
+                                        <option value="sage">Sage</option>
+                                        <option value="soldier">Soldier</option>
+                                        <option value="charlatan">Charlatan</option>
+                                        <option value="entertainer">Entertainer</option>
+                                        <option value="guild-artisan">Guild Artisan</option>
+                                        <option value="hermit">Hermit</option>
+                                        <option value="outlander">Outlander</option>
+                                        <option value="sailor">Sailor</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h4>AI Creativity Settings</h4>
+                                <div class="form-group">
+                                    <label for="creativityLevel">Creativity Level</label>
+                                    <div class="slider-container">
+                                        <input type="range" id="creativityLevel" min="1" max="10" value="5" class="slider">
+                                        <div class="slider-labels">
+                                            <span>Conservative</span>
+                                            <span>Balanced</span>
+                                            <span>Creative</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="characterLevel">Starting Level</label>
+                                    <select id="characterLevel">
+                                        <option value="1">Level 1 (Beginner)</option>
+                                        <option value="3">Level 3 (Experienced)</option>
+                                        <option value="5">Level 5 (Veteran)</option>
+                                        <option value="10">Level 10 (Hero)</option>
+                                        <option value="15">Level 15 (Champion)</option>
+                                        <option value="20">Level 20 (Legend)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Source Books to Use</label>
+                                    <div class="book-selection" id="bookSelection">
+                                        <!-- Books will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h4>Character Personality</h4>
+                                <div class="form-group">
+                                    <label for="personalityPrompt">Personality Prompt (Optional)</label>
+                                    <textarea id="personalityPrompt" placeholder="e.g., 'A mysterious character with a dark past' or 'A cheerful optimist who loves adventure'"></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Character Archetype</label>
+                                    <div class="archetype-grid">
+                                        <label class="archetype-option">
+                                            <input type="radio" name="archetype" value="hero">
+                                            <span class="archetype-card">
+                                                <i class="fas fa-shield-alt"></i>
+                                                <strong>Hero</strong>
+                                                <small>Noble and brave</small>
+                                            </span>
+                                        </label>
+                                        <label class="archetype-option">
+                                            <input type="radio" name="archetype" value="antihero">
+                                            <span class="archetype-card">
+                                                <i class="fas fa-mask"></i>
+                                                <strong>Anti-Hero</strong>
+                                                <small>Complex morality</small>
+                                            </span>
+                                        </label>
+                                        <label class="archetype-option">
+                                            <input type="radio" name="archetype" value="trickster">
+                                            <span class="archetype-card">
+                                                <i class="fas fa-theater-masks"></i>
+                                                <strong>Trickster</strong>
+                                                <small>Clever and cunning</small>
+                                            </span>
+                                        </label>
+                                        <label class="archetype-option">
+                                            <input type="radio" name="archetype" value="mentor">
+                                            <span class="archetype-card">
+                                                <i class="fas fa-graduation-cap"></i>
+                                                <strong>Mentor</strong>
+                                                <small>Wise and guiding</small>
+                                            </span>
+                                        </label>
+                                        <label class="archetype-option">
+                                            <input type="radio" name="archetype" value="random" checked>
+                                            <span class="archetype-card">
+                                                <i class="fas fa-dice"></i>
+                                                <strong>Surprise Me</strong>
+                                                <small>AI decides</small>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="creation-actions">
+                                <button class="btn btn-primary btn-lg" onclick="generateCharacter()">
+                                    <i class="fas fa-magic"></i> Generate Character
+                                </button>
+                                <button class="btn btn-secondary" onclick="saveCharacterTemplate()">
+                                    <i class="fas fa-save"></i> Save Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Panel - Generated Character -->
+                    <div class="character-display">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-user"></i> Generated Character</h3>
+                            <div class="character-actions">
+                                <button class="btn btn-outline btn-sm" onclick="exportCharacter()" id="exportBtn" disabled>
+                                    <i class="fas fa-download"></i> Export
+                                </button>
+                                <button class="btn btn-outline btn-sm" onclick="saveCharacter()" id="saveBtn" disabled>
+                                    <i class="fas fa-heart"></i> Save
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="character-sheet" id="characterSheet">
+                            <div class="empty-character">
+                                <i class="fas fa-user-plus"></i>
+                                <h4>No Character Generated Yet</h4>
+                                <p>Fill out the parameters on the left and click "Generate Character" to create your AI-powered D&D character!</p>
+                                <div class="generation-tips">
+                                    <h5>💡 Tips for Better Results:</h5>
+                                    <ul>
+                                        <li>Upload more D&D books to your library for richer content</li>
+                                        <li>Use personality prompts for more specific characters</li>
+                                        <li>Adjust creativity level based on your campaign needs</li>
+                                        <li>Select specific source books for campaign consistency</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="generation-progress" id="generationProgress" style="display: none;">
+                            <div class="progress-content">
+                                <div class="spinner"></div>
+                                <h4>AI is Creating Your Character...</h4>
+                                <p id="progressText">Analyzing your book collection...</p>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progressFill"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Character History Section -->
+        <section class="character-history">
+            <div class="container">
+                <div class="history-header">
+                    <h3><i class="fas fa-history"></i> Recently Generated Characters</h3>
+                    <button class="btn btn-outline btn-sm" onclick="clearHistory()">
+                        <i class="fas fa-trash"></i> Clear History
+                    </button>
+                </div>
+                <div class="character-history-grid" id="characterHistory">
+                    <!-- Character history will be populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Character Export Modal -->
+    <div id="exportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-download"></i> Export Character</h3>
+                <span class="close" onclick="closeExportModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="export-options">
+                    <h4>Export Format</h4>
+                    <div class="export-format-grid">
+                        <label class="export-option">
+                            <input type="radio" name="exportFormat" value="json" checked>
+                            <span class="export-card">
+                                <i class="fas fa-code"></i>
+                                <strong>JSON</strong>
+                                <small>For digital tools</small>
+                            </span>
+                        </label>
+                        <label class="export-option">
+                            <input type="radio" name="exportFormat" value="pdf">
+                            <span class="export-card">
+                                <i class="fas fa-file-pdf"></i>
+                                <strong>PDF</strong>
+                                <small>Printable sheet</small>
+                            </span>
+                        </label>
+                        <label class="export-option">
+                            <input type="radio" name="exportFormat" value="txt">
+                            <span class="export-card">
+                                <i class="fas fa-file-alt"></i>
+                                <strong>Text</strong>
+                                <small>Simple format</small>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeExportModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="performExport()">
+                        <i class="fas fa-download"></i> Export Character
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <p>&copy; 2024 Dragon's Library - Your D&D Adventure Hub</p>
+            <div class="footer-links">
+                <a href="#"><i class="fas fa-dice-d20"></i> Roll Initiative</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/character-creator.js"></script>
+</body>
+</html>
+
