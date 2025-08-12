@@ -7,15 +7,18 @@ let availableBooks = [];
 
 // Initialize the character creator
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎭 Character Creator initializing...');
     initializeCharacterCreator();
     loadCharacterHistory();
     updateBookSelection();
     updateStats();
+    console.log('🎭 Character Creator initialized successfully!');
 });
 
 function initializeCharacterCreator() {
     // Load available books from storage
     availableBooks = getStoredBooks();
+    console.log(`📚 Loaded ${availableBooks.length} books from storage`);
     
     // Set up event listeners
     setupEventListeners();
@@ -46,6 +49,8 @@ function initializeFormDefaults() {
 function updateStats() {
     const availableBooksElement = document.getElementById('availableBooks');
     const aiStatusElement = document.getElementById('aiStatus');
+    
+    console.log(`📊 Updating stats: ${availableBooks.length} books available`);
     
     if (availableBooksElement) {
         availableBooksElement.textContent = availableBooks.length;
@@ -735,13 +740,21 @@ function getRandomBackground() {
 }
 
 function getStoredBooks() {
-    const books = localStorage.getItem('dndBooks');
-    return books ? JSON.parse(books) : [];
+    // Use the same storage system as the main library
+    if (typeof window.DragonLibraryStorage !== 'undefined' && typeof window.DragonLibraryStorage.getStoredBooks === 'function') {
+        return window.DragonLibraryStorage.getStoredBooks();
+    } else {
+        // Fallback to direct localStorage access
+        const books = localStorage.getItem('dragon_library_books');
+        return books ? JSON.parse(books) : [];
+    }
 }
 
 function showNotification(message, type = 'info') {
     // Use the existing notification system from main.js
-    if (typeof window.showNotification === 'function') {
+    if (typeof window.DragonLibrary !== 'undefined' && typeof window.DragonLibrary.showNotification === 'function') {
+        window.DragonLibrary.showNotification(message, type);
+    } else if (typeof window.showNotification === 'function') {
         window.showNotification(message, type);
     } else {
         console.log(`${type.toUpperCase()}: ${message}`);
