@@ -4,6 +4,8 @@
 let currentCharacter = null;
 let characterHistory = [];
 let availableBooks = [];
+let currentCreationMode = 'ai';
+let currentWizardStep = 1;
 
 // Initialize the character creator
 document.addEventListener('DOMContentLoaded', function() {
@@ -759,4 +761,560 @@ function showNotification(message, type = 'info') {
     } else {
         console.log(`${type.toUpperCase()}: ${message}`);
     }
+}
+
+// ===== MANUAL CHARACTER CREATION FUNCTIONS =====
+
+function switchCreationMode(mode) {
+    currentCreationMode = mode;
+    
+    const aiForm = document.getElementById('aiCreationForm');
+    const manualForm = document.getElementById('manualCreationForm');
+    const aiBtn = document.getElementById('aiModeBtn');
+    const manualBtn = document.getElementById('manualModeBtn');
+    
+    if (mode === 'ai') {
+        aiForm.style.display = 'block';
+        manualForm.style.display = 'none';
+        aiBtn.classList.add('active');
+        manualBtn.classList.remove('active');
+    } else {
+        aiForm.style.display = 'none';
+        manualForm.style.display = 'block';
+        aiBtn.classList.remove('active');
+        manualBtn.classList.add('active');
+        
+        // Initialize manual form if first time
+        initializeManualForm();
+    }
+    
+    console.log(`🔄 Switched to ${mode} creation mode`);
+}
+
+function initializeManualForm() {
+    // Reset wizard to step 1
+    currentWizardStep = 1;
+    updateWizardStep();
+    
+    // Initialize point buy system
+    updatePointBuy();
+}
+
+function nextStep() {
+    if (currentWizardStep < 4) {
+        // Validate current step before proceeding
+        if (validateCurrentStep()) {
+            currentWizardStep++;
+            updateWizardStep();
+        }
+    }
+}
+
+function previousStep() {
+    if (currentWizardStep > 1) {
+        currentWizardStep--;
+        updateWizardStep();
+    }
+}
+
+function updateWizardStep() {
+    // Update step indicators
+    document.querySelectorAll('.wizard-steps .step').forEach((step, index) => {
+        if (index + 1 === currentWizardStep) {
+            step.classList.add('active');
+        } else {
+            step.classList.remove('active');
+        }
+    });
+    
+    // Show/hide wizard steps
+    document.querySelectorAll('.wizard-step').forEach((step, index) => {
+        if (index + 1 === currentWizardStep) {
+            step.style.display = 'block';
+        } else {
+            step.style.display = 'none';
+        }
+    });
+    
+    // Update navigation buttons
+    const prevBtn = document.getElementById('prevStepBtn');
+    const nextBtn = document.getElementById('nextStepBtn');
+    const createBtn = document.getElementById('createCharacterBtn');
+    const stepNum = document.getElementById('currentStepNum');
+    
+    prevBtn.disabled = currentWizardStep === 1;
+    stepNum.textContent = currentWizardStep;
+    
+    if (currentWizardStep === 4) {
+        nextBtn.style.display = 'none';
+        createBtn.style.display = 'inline-block';
+    } else {
+        nextBtn.style.display = 'inline-block';
+        createBtn.style.display = 'none';
+    }
+}
+
+function validateCurrentStep() {
+    switch (currentWizardStep) {
+        case 1:
+            const name = document.getElementById('manualCharacterName').value.trim();
+            const race = document.getElementById('manualCharacterRace').value;
+            const charClass = document.getElementById('manualCharacterClass').value;
+            
+            if (!name) {
+                showNotification('Please enter a character name', 'warning');
+                return false;
+            }
+            if (!race) {
+                showNotification('Please select a race', 'warning');
+                return false;
+            }
+            if (!charClass) {
+                showNotification('Please select a class', 'warning');
+                return false;
+            }
+            return true;
+            
+        case 2:
+            // Validate ability scores
+            const method = document.querySelector('input[name="abilityMethod"]:checked').value;
+            if (method === 'pointbuy') {
+                const remaining = parseInt(document.getElementById('pointsRemaining').textContent);
+                if (remaining < 0) {
+                    showNotification('You have exceeded your point budget', 'warning');
+                    return false;
+                }
+            }
+            return true;
+            
+        case 3:
+            // Validate skill selections
+            return true;
+            
+        case 4:
+            // Final step - no validation needed
+            return true;
+            
+        default:
+            return true;
+    }
+}
+
+function updateManualRacialTraits() {
+    const race = document.getElementById('manualCharacterRace').value;
+    const traitsDisplay = document.getElementById('racialTraitsDisplay');
+    
+    if (!race) {
+        traitsDisplay.innerHTML = '';
+        return;
+    }
+    
+    const racialTraits = getRacialTraits(race);
+    traitsDisplay.innerHTML = `
+        <div class="traits-info">
+            <h5><i class="fas fa-star"></i> ${race.charAt(0).toUpperCase() + race.slice(1)} Traits</h5>
+            <ul>
+                ${racialTraits.map(trait => `<li><strong>${trait.name}:</strong> ${trait.description}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+}
+
+function updateManualClassFeatures() {
+    const charClass = document.getElementById('manualCharacterClass').value;
+    
+    if (charClass) {
+        // Update skill choices based on class
+        updateClassSkills(charClass);
+    }
+}
+
+function updateManualLevelFeatures() {
+    const level = parseInt(document.getElementById('manualCharacterLevel').value);
+    // Update features based on level
+    console.log(`Updated to level ${level}`);
+}
+
+function updateManualBackgroundFeatures() {
+    const background = document.getElementById('manualCharacterBackground').value;
+    
+    if (background) {
+        // Update background skills
+        updateBackgroundSkills(background);
+    }
+}
+
+function switchAbilityMethod() {
+    const method = document.querySelector('input[name="abilityMethod"]:checked').value;
+    const inputs = document.querySelectorAll('.ability-scores-grid input[type="number"]');
+    const pointsDisplay = document.querySelector('.points-remaining');
+    
+    switch (method) {
+        case 'pointbuy':
+            inputs.forEach(input => {
+                input.min = 8;
+                input.max = 15;
+                input.disabled = false;
+            });
+            pointsDisplay.style.display = 'block';
+            updatePointBuy();
+            break;
+            
+        case 'standard':
+            const standardArray = [15, 14, 13, 12, 10, 8];
+            inputs.forEach((input, index) => {
+                input.value = standardArray[index] || 8;
+                input.disabled = true;
+                updateAbilityModifier(input.id);
+            });
+            pointsDisplay.style.display = 'none';
+            break;
+            
+        case 'manual':
+            inputs.forEach(input => {
+                input.min = 3;
+                input.max = 18;
+                input.disabled = false;
+            });
+            pointsDisplay.style.display = 'none';
+            break;
+    }
+}
+
+function updatePointBuy() {
+    const abilities = ['Str', 'Dex', 'Con', 'Int', 'Wis', 'Cha'];
+    let totalCost = 0;
+    
+    abilities.forEach(ability => {
+        const input = document.getElementById(`manual${ability}`);
+        const value = parseInt(input.value);
+        const cost = getPointBuyCost(value);
+        
+        totalCost += cost;
+        
+        // Update cost display
+        const costDisplay = document.getElementById(`${ability.toLowerCase()}Cost`);
+        if (costDisplay) {
+            costDisplay.textContent = `${cost} points`;
+        }
+        
+        // Update modifier
+        updateAbilityModifier(`manual${ability}`);
+    });
+    
+    const remaining = 27 - totalCost;
+    document.getElementById('pointsRemaining').textContent = remaining;
+    
+    // Color code based on remaining points
+    const remainingElement = document.getElementById('pointsRemaining');
+    if (remaining < 0) {
+        remainingElement.style.color = 'var(--error-color)';
+    } else if (remaining === 0) {
+        remainingElement.style.color = 'var(--success-color)';
+    } else {
+        remainingElement.style.color = 'var(--text-light)';
+    }
+}
+
+function getPointBuyCost(score) {
+    const costs = {
+        8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9
+    };
+    return costs[score] || 0;
+}
+
+function updateAbilityModifier(inputId) {
+    const input = document.getElementById(inputId);
+    const value = parseInt(input.value);
+    const modifier = Math.floor((value - 10) / 2);
+    const modifierText = modifier >= 0 ? `(+${modifier})` : `(${modifier})`;
+    
+    const ability = inputId.replace('manual', '').toLowerCase();
+    const modifierElement = document.getElementById(`${ability}Mod`);
+    if (modifierElement) {
+        modifierElement.textContent = modifierText;
+    }
+}
+
+function updateClassSkills(charClass) {
+    const classSkills = getClassSkills(charClass);
+    const skillsGrid = document.getElementById('classSkillsGrid');
+    const skillCount = document.getElementById('skillChoiceCount');
+    
+    const skillChoices = getClassSkillChoices(charClass);
+    skillCount.textContent = skillChoices;
+    
+    skillsGrid.innerHTML = classSkills.map(skill => `
+        <label class="skill-option">
+            <input type="checkbox" name="classSkill" value="${skill}" onchange="validateSkillSelection()">
+            <span>${skill}</span>
+        </label>
+    `).join('');
+}
+
+function updateBackgroundSkills(background) {
+    const backgroundSkills = getBackgroundSkills(background);
+    const skillsGrid = document.getElementById('backgroundSkillsGrid');
+    
+    skillsGrid.innerHTML = backgroundSkills.map(skill => `
+        <div class="skill-granted">
+            <i class="fas fa-check"></i> ${skill}
+        </div>
+    `).join('');
+}
+
+function validateSkillSelection() {
+    const selectedSkills = document.querySelectorAll('input[name="classSkill"]:checked');
+    const maxSkills = parseInt(document.getElementById('skillChoiceCount').textContent);
+    
+    if (selectedSkills.length > maxSkills) {
+        // Uncheck the last selected skill
+        selectedSkills[selectedSkills.length - 1].checked = false;
+        showNotification(`You can only choose ${maxSkills} skills from your class`, 'warning');
+    }
+}
+
+function createManualCharacter() {
+    // Collect all manual form data
+    const characterData = collectManualFormData();
+    
+    // Validate required fields
+    if (!validateManualCharacter(characterData)) {
+        return;
+    }
+    
+    // Create the character object
+    const character = buildManualCharacter(characterData);
+    
+    // Display the character
+    displayCharacter(character);
+    
+    // Save to history
+    saveToHistory(character);
+    
+    // Enable export/save buttons
+    enableCharacterActions();
+    
+    showNotification(`${character.name} created successfully!`, 'success');
+}
+
+function collectManualFormData() {
+    return {
+        name: document.getElementById('manualCharacterName').value.trim(),
+        race: document.getElementById('manualCharacterRace').value,
+        class: document.getElementById('manualCharacterClass').value,
+        level: parseInt(document.getElementById('manualCharacterLevel').value),
+        background: document.getElementById('manualCharacterBackground').value,
+        
+        // Ability scores
+        abilities: {
+            strength: parseInt(document.getElementById('manualStr').value),
+            dexterity: parseInt(document.getElementById('manualDex').value),
+            constitution: parseInt(document.getElementById('manualCon').value),
+            intelligence: parseInt(document.getElementById('manualInt').value),
+            wisdom: parseInt(document.getElementById('manualWis').value),
+            charisma: parseInt(document.getElementById('manualCha').value)
+        },
+        
+        // Skills
+        classSkills: Array.from(document.querySelectorAll('input[name="classSkill"]:checked')).map(cb => cb.value),
+        
+        // Character details
+        personalityTraits: document.getElementById('manualPersonalityTraits').value.trim(),
+        ideals: document.getElementById('manualIdeals').value.trim(),
+        bonds: document.getElementById('manualBonds').value.trim(),
+        flaws: document.getElementById('manualFlaws').value.trim(),
+        backstory: document.getElementById('manualBackstory').value.trim(),
+        alignment: document.getElementById('manualAlignment').value,
+        age: document.getElementById('manualAge').value,
+        height: document.getElementById('manualHeight').value,
+        weight: document.getElementById('manualWeight').value,
+        appearance: document.getElementById('manualAppearance').value.trim(),
+        
+        creationMethod: 'manual',
+        timestamp: new Date().toISOString()
+    };
+}
+
+function validateManualCharacter(data) {
+    if (!data.name) {
+        showNotification('Character name is required', 'error');
+        return false;
+    }
+    if (!data.race) {
+        showNotification('Race selection is required', 'error');
+        return false;
+    }
+    if (!data.class) {
+        showNotification('Class selection is required', 'error');
+        return false;
+    }
+    return true;
+}
+
+function buildManualCharacter(data) {
+    // Calculate derived stats
+    const modifiers = {
+        strength: Math.floor((data.abilities.strength - 10) / 2),
+        dexterity: Math.floor((data.abilities.dexterity - 10) / 2),
+        constitution: Math.floor((data.abilities.constitution - 10) / 2),
+        intelligence: Math.floor((data.abilities.intelligence - 10) / 2),
+        wisdom: Math.floor((data.abilities.wisdom - 10) / 2),
+        charisma: Math.floor((data.abilities.charisma - 10) / 2)
+    };
+    
+    const proficiencyBonus = Math.ceil(data.level / 4) + 1;
+    const hitDie = getClassHitDie(data.class);
+    const hitPoints = hitDie + modifiers.constitution + ((data.level - 1) * (Math.floor(hitDie / 2) + 1 + modifiers.constitution));
+    
+    return {
+        id: generateId(),
+        name: data.name,
+        race: data.race,
+        class: data.class,
+        level: data.level,
+        background: data.background,
+        
+        abilities: data.abilities,
+        modifiers: modifiers,
+        
+        combat: {
+            hitPoints: hitPoints,
+            armorClass: 10 + modifiers.dexterity, // Base AC, would be modified by armor
+            speed: getRaceSpeed(data.race),
+            proficiencyBonus: proficiencyBonus,
+            hitDie: `1d${hitDie}`
+        },
+        
+        skills: data.classSkills,
+        
+        personality: {
+            traits: data.personalityTraits,
+            ideals: data.ideals,
+            bonds: data.bonds,
+            flaws: data.flaws,
+            backstory: data.backstory
+        },
+        
+        physical: {
+            alignment: data.alignment,
+            age: data.age,
+            height: data.height,
+            weight: data.weight,
+            appearance: data.appearance
+        },
+        
+        features: getRaceFeatures(data.race).concat(getClassFeatures(data.class, data.level)),
+        equipment: getStartingEquipment(data.class, data.background),
+        
+        creationMethod: 'manual',
+        createdAt: data.timestamp
+    };
+}
+
+// Helper functions for manual character creation
+function getRacialTraits(race) {
+    const traits = {
+        human: [
+            { name: 'Versatile', description: '+1 to all ability scores' },
+            { name: 'Extra Skill', description: 'Gain proficiency in one skill of your choice' },
+            { name: 'Extra Feat', description: 'Gain a bonus feat at 1st level' }
+        ],
+        elf: [
+            { name: 'Darkvision', description: 'See in dim light within 60 feet' },
+            { name: 'Fey Ancestry', description: 'Advantage on saves against being charmed' },
+            { name: 'Trance', description: 'Meditate for 4 hours instead of sleeping' }
+        ],
+        dwarf: [
+            { name: 'Darkvision', description: 'See in dim light within 60 feet' },
+            { name: 'Dwarven Resilience', description: 'Advantage on saves against poison' },
+            { name: 'Stonecunning', description: 'Add proficiency bonus to History checks related to stonework' }
+        ]
+        // Add more races as needed
+    };
+    
+    return traits[race] || [];
+}
+
+function getClassSkills(charClass) {
+    const skills = {
+        barbarian: ['Animal Handling', 'Athletics', 'Intimidation', 'Nature', 'Perception', 'Survival'],
+        bard: ['Deception', 'History', 'Investigation', 'Persuasion', 'Performance', 'Sleight of Hand'],
+        cleric: ['History', 'Insight', 'Medicine', 'Persuasion', 'Religion'],
+        fighter: ['Acrobatics', 'Animal Handling', 'Athletics', 'History', 'Insight', 'Intimidation', 'Perception', 'Survival'],
+        rogue: ['Acrobatics', 'Athletics', 'Deception', 'Insight', 'Intimidation', 'Investigation', 'Perception', 'Performance', 'Persuasion', 'Sleight of Hand', 'Stealth']
+        // Add more classes as needed
+    };
+    
+    return skills[charClass] || [];
+}
+
+function getClassSkillChoices(charClass) {
+    const choices = {
+        barbarian: 2, bard: 3, cleric: 2, fighter: 2, rogue: 4
+        // Add more classes as needed
+    };
+    
+    return choices[charClass] || 2;
+}
+
+function getBackgroundSkills(background) {
+    const skills = {
+        acolyte: ['Insight', 'Religion'],
+        criminal: ['Deception', 'Stealth'],
+        'folk-hero': ['Animal Handling', 'Survival'],
+        noble: ['History', 'Persuasion'],
+        sage: ['Arcana', 'History'],
+        soldier: ['Athletics', 'Intimidation']
+        // Add more backgrounds as needed
+    };
+    
+    return skills[background] || [];
+}
+
+function getClassHitDie(charClass) {
+    const hitDice = {
+        barbarian: 12, fighter: 10, paladin: 10, ranger: 10,
+        bard: 8, cleric: 8, druid: 8, monk: 8, rogue: 8, warlock: 8,
+        sorcerer: 6, wizard: 6
+    };
+    
+    return hitDice[charClass] || 8;
+}
+
+function getRaceSpeed(race) {
+    const speeds = {
+        human: 30, elf: 30, dwarf: 25, halfling: 25, dragonborn: 30,
+        gnome: 25, 'half-elf': 30, 'half-orc': 30, tiefling: 30
+    };
+    
+    return speeds[race] || 30;
+}
+
+function getRaceFeatures(race) {
+    // Return basic race features - in a full implementation this would be much more detailed
+    return [`${race.charAt(0).toUpperCase() + race.slice(1)} Heritage`];
+}
+
+function getClassFeatures(charClass, level) {
+    // Return basic class features - in a full implementation this would be much more detailed
+    const features = [`${charClass.charAt(0).toUpperCase() + charClass.slice(1)} Training`];
+    
+    if (level >= 2) {
+        features.push('Class Feature (Level 2)');
+    }
+    if (level >= 3) {
+        features.push('Class Feature (Level 3)');
+    }
+    
+    return features;
+}
+
+function getStartingEquipment(charClass, background) {
+    // Return basic starting equipment - in a full implementation this would be much more detailed
+    return [
+        'Basic adventuring gear',
+        `${charClass.charAt(0).toUpperCase() + charClass.slice(1)} equipment`,
+        `${background.charAt(0).toUpperCase() + background.slice(1)} kit`
+    ];
 }
