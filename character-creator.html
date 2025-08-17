@@ -84,42 +84,54 @@
                                     </div>
                                 </div>
 
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="characterRace">Race</label>
-                                        <select id="characterRace" onchange="updateAvailableOptions()">
-                                            <option value="random">🎲 AI Choice</option>
-                                            <option value="human">Human</option>
-                                            <option value="elf">Elf</option>
-                                            <option value="dwarf">Dwarf</option>
-                                            <option value="halfling">Halfling</option>
-                                            <option value="dragonborn">Dragonborn</option>
-                                            <option value="gnome">Gnome</option>
-                                            <option value="half-elf">Half-Elf</option>
-                                            <option value="half-orc">Half-Orc</option>
-                                            <option value="tiefling">Tiefling</option>
-                                        </select>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="characterRace">Race</label>
+                                            <select id="characterRace" onchange="updateAvailableOptions()">
+                                                <option value="random">🎲 AI Choice</option>
+                                                <option value="human">Human</option>
+                                                <option value="elf">Elf</option>
+                                                <option value="dwarf">Dwarf</option>
+                                                <option value="halfling">Halfling</option>
+                                                <option value="dragonborn">Dragonborn</option>
+                                                <option value="gnome">Gnome</option>
+                                                <option value="half-elf">Half-Elf</option>
+                                                <option value="half-orc">Half-Orc</option>
+                                                <option value="tiefling">Tiefling</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="characterClass">Class</label>
+                                            <select id="characterClass" onchange="updateAvailableOptions()">
+                                                <option value="random">🎲 AI Choice</option>
+                                                <option value="barbarian">Barbarian</option>
+                                                <option value="bard">Bard</option>
+                                                <option value="cleric">Cleric</option>
+                                                <option value="druid">Druid</option>
+                                                <option value="fighter">Fighter</option>
+                                                <option value="monk">Monk</option>
+                                                <option value="paladin">Paladin</option>
+                                                <option value="ranger">Ranger</option>
+                                                <option value="rogue">Rogue</option>
+                                                <option value="sorcerer">Sorcerer</option>
+                                                <option value="warlock">Warlock</option>
+                                                <option value="wizard">Wizard</option>
+                                            </select>
+                                        </div>
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="characterClass">Class</label>
-                                        <select id="characterClass" onchange="updateAvailableOptions()">
-                                            <option value="random">🎲 AI Choice</option>
-                                            <option value="barbarian">Barbarian</option>
-                                            <option value="bard">Bard</option>
-                                            <option value="cleric">Cleric</option>
-                                            <option value="druid">Druid</option>
-                                            <option value="fighter">Fighter</option>
-                                            <option value="monk">Monk</option>
-                                            <option value="paladin">Paladin</option>
-                                            <option value="ranger">Ranger</option>
-                                            <option value="rogue">Rogue</option>
-                                            <option value="sorcerer">Sorcerer</option>
-                                            <option value="warlock">Warlock</option>
-                                            <option value="wizard">Wizard</option>
-                                        </select>
+                                        <label><input type="checkbox" id="enableAIMulticlass"> Enable Multiclassing</label>
                                     </div>
-                                </div>
+                                    <div class="form-group" id="aiMulticlassEditor" style="display: none;">
+                                        <label>Additional Classes</label>
+                                                                                <small class="help-text">Primary class is selected above. Assign some of the total levels to additional classes. Primary class level = total level - sum of additional class levels.</small>
+                                        <div id="aiClassList" class="class-list"></div>
+                                        <button type="button" class="btn btn-outline btn-sm" id="addAIClassBtn">
+                                            <i class="fas fa-plus"></i> Add Class
+                                        </button>
+                                    </div>
 
                                 <div class="form-group">
                                     <label for="characterBackground">Background</label>
@@ -308,6 +320,18 @@
                                                 <option value="wizard">Wizard</option>
                                             </select>
                                         </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label><input type="checkbox" id="enableManualMulticlass"> Enable Multiclassing</label>
+                                    </div>
+                                    <div class="form-group" id="manualMulticlassEditor" style="display: none;">
+                                        <label>Additional Classes</label>
+                                        <small class="help-text">Primary class is selected above. Assign levels to additional classes. Primary class level = total level - sum of additional class levels.</small>
+                                        <div id="manualClassList" class="class-list"></div>
+                                        <button type="button" class="btn btn-outline btn-sm" id="addManualClassBtn">
+                                            <i class="fas fa-plus"></i> Add Class
+                                        </button>
                                     </div>
 
                                     <div class="form-row">

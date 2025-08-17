@@ -41,6 +41,32 @@ function setupEventListeners() {
     formElements.forEach(element => {
         element.addEventListener('change', updateAvailableOptions);
     });
+
+    // Multiclass UI controls (AI)
+    const enableAIMulticlass = document.getElementById('enableAIMulticlass');
+    if (enableAIMulticlass) {
+        enableAIMulticlass.addEventListener('change', function() {
+            const editor = document.getElementById('aiMulticlassEditor');
+            if (editor) editor.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+    const addAIClassBtn = document.getElementById('addAIClassBtn');
+    if (addAIClassBtn) {
+        addAIClassBtn.addEventListener('click', () => addMulticlassRow('aiClassList'));
+    }
+
+    // Multiclass UI controls (Manual)
+    const enableManualMulticlass = document.getElementById('enableManualMulticlass');
+    if (enableManualMulticlass) {
+        enableManualMulticlass.addEventListener('change', function() {
+            const editor = document.getElementById('manualMulticlassEditor');
+            if (editor) editor.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+    const addManualClassBtn = document.getElementById('addManualClassBtn');
+    if (addManualClassBtn) {
+        addManualClassBtn.addEventListener('click', () => addMulticlassRow('manualClassList'));
+    }
 }
 
 function initializeFormDefaults() {
@@ -164,6 +190,14 @@ function randomizeAll() {
         const randomClass = classOptions[Math.floor(Math.random() * classOptions.length)];
         classSelect.value = randomClass.value;
     }
+
+    // Clear AI multiclass list when randomizing
+    const aiClassList = document.getElementById('aiClassList');
+    if (aiClassList) aiClassList.innerHTML = '';
+    const enableAIMC = document.getElementById('enableAIMulticlass');
+    if (enableAIMC) enableAIMC.checked = false;
+    const aiEditor = document.getElementById('aiMulticlassEditor');
+    if (aiEditor) aiEditor.style.display = 'none';
     
     // Randomize background
     const backgroundSelect = document.getElementById('characterBackground');
@@ -237,6 +271,10 @@ function collectFormData() {
     const selectedBooks = Array.from(document.querySelectorAll('.book-checkbox:checked')).map(cb => cb.value);
     const selectedArchetype = document.querySelector('input[name="archetype"]:checked')?.value || 'random';
     
+    const enableAIMC = document.getElementById('enableAIMulticlass');
+    const aiMulticlassEnabled = !!(enableAIMC && enableAIMC.checked);
+    const aiMulticlasses = aiMulticlassEnabled ? readMulticlassList('aiClassList') : [];
+    
     return {
         name: document.getElementById('characterName').value.trim(),
         race: document.getElementById('characterRace').value,
@@ -247,6 +285,7 @@ function collectFormData() {
         personalityPrompt: document.getElementById('personalityPrompt').value.trim(),
         archetype: selectedArchetype,
         selectedBooks: selectedBooks,
+        multiclass: aiMulticlasses,
         timestamp: new Date().toISOString()
     };
 }
@@ -295,25 +334,127 @@ async function simulateAIGeneration(characterData) {
     }
 }
 
+function normalizeAIMulticlass(data) {
+    const totalLevel = data.level || 1;
+    const chosenPrimary = data.class === 'random' ? getRandomClass() : data.class;
+    const extras = Array.isArray(data.multiclass) ? data.multiclass : [];
+
+    // Clamp extras so they don't exceed total level
+    let remainingForExtras = totalLevel;
+    const clampedExtras = [];
+    extras.forEach(e => {
+        if (!e.class || !e.levels || e.levels <= 0) return;
+        const allow = Math.min(e.levels, remainingForExtras);
+        if (allow > 0) {
+            clampedExtras.push({ class: e.class, levels: allow });
+            remainingForExtras -= allow;
+        }
+    });
+
+    const sumExtraLevels = clampedExtras.reduce((sum, e) => sum + (e.levels || 0), 0);
+    const primaryLevels = Math.max(totalLevel - sumExtraLevels, 0);
+    const classLevels = [];
+    if (primaryLevels > 0) classLevels.push({ class: chosenPrimary, levels: primaryLevels });
+    clampedExtras.forEach(e => classLevels.push({ class: e.class, levels: e.levels }));
+    return classLevels;
+}
+
+function formatClassString(classLevels) {
+    if (!classLevels || classLevels.length === 0) return '';
+    return classLevels.map(cl => `${cl.class.charAt(0).toUpperCase() + cl.class.slice(1)} ${cl.levels}`).join(' / ');
+}
+
+function computeMulticlassHitPoints(classLevels, conMod, totalLevel) {
+    // Approximate: first level uses hit die max of first class listed; subsequent levels use average per class.
+    if (!classLevels || classLevels.length === 0) return 8 + conMod; // fallback
+    let hp = 0;
+    let levelsRemaining = totalLevel;
+    let firstApplied = false;
+    for (let i = 0; i < classLevels.length; i++) {
+        const { class: cls, levels } = classLevels[i];
+        const die = getClassHitDie(cls);
+        const applyLevels = Math.min(levels, levelsRemaining);
+        for (let lvl = 0; lvl < applyLevels; lvl++) {
+            if (!firstApplied) {
+                hp += die + conMod;
+                firstApplied = true;
+            } else {
+                hp += (Math.floor(die / 2) + 1) + conMod;
+            }
+        }
+        levelsRemaining -= applyLevels;
+        if (levelsRemaining <= 0) break;
+    }
+    return hp;
+}
+
+function combineClassFeatures(classLevels, totalLevel) {
+    const features = [];
+    classLevels.forEach(cl => {
+        features.push(...getClassFeatures(cl.class, cl.levels));
+    });
+    return features;
+}
+
+function combineSpellsForClasses(classLevels) {
+    // naive union of spell lists we already have mappings for
+    const spells = new Set();
+    classLevels.forEach(({ class: cls }) => {
+        const temp = generateSpells({ class: cls });
+        temp.forEach(s => spells.add(s));
+    });
+    return Array.from(spells);
+}
+
+function pickPrimaryClass(classLevels) {
+    if (!classLevels || classLevels.length === 0) return 'fighter';
+    // Highest level class first; break ties by order
+    const sorted = [...classLevels].sort((a, b) => b.levels - a.levels);
+    return sorted[0].class;
+}
+
 async function createCharacter(data) {
     // This is a mock AI character generation
     // In a real implementation, this would call an AI service
+    
+    const classLevels = normalizeAIMulticlass(data);
+    const totalLevel = data.level;
+    const primaryClass = pickPrimaryClass(classLevels);
+
+    const baseAbilities = generateStats();
+    const conMod = Math.floor((baseAbilities.constitution - 10) / 2);
     
     const character = {
         id: generateId(),
         name: data.name || generateRandomName(),
         race: data.race === 'random' ? getRandomRace() : data.race,
-        class: data.class === 'random' ? getRandomClass() : data.class,
+        class: classLevels.length > 1 ? formatClassString(classLevels) : (data.class === 'random' ? getRandomClass() : data.class),
+        classes: classLevels, // structured multiclass breakdown
         background: data.background === 'random' ? getRandomBackground() : data.background,
-        level: data.level,
-        stats: generateStats(),
+        level: totalLevel,
+        stats: baseAbilities,
         personality: generatePersonality(data),
         backstory: generateBackstory(data),
-        equipment: generateEquipment(data),
-        spells: generateSpells(data),
-        features: generateFeatures(data),
+        equipment: generateEquipment({ class: primaryClass }),
+        spells: combineSpellsForClasses(classLevels),
+        features: getRaceFeatures(data.race === 'random' ? getRandomRace() : data.race).concat(combineClassFeatures(classLevels, totalLevel)),
         createdAt: new Date().toISOString(),
         sourceBooks: data.selectedBooks
+    };
+
+    // Compute combat derived
+    const proficiencyBonus = Math.ceil(totalLevel / 4) + 1;
+    const hitPoints = computeMulticlassHitPoints(classLevels, conMod, totalLevel);
+    const hitDieString = classLevels.length > 1
+        ? classLevels.map(cl => `${cl.levels}d${getClassHitDie(cl.class)}`).join(' + ')
+        : `1d${getClassHitDie(primaryClass)}`;
+    
+    character.combat = {
+        hitPoints: hitPoints,
+        armorClass: 10 + Math.floor((baseAbilities.dexterity - 10) / 2),
+        speed: getRaceSpeed(character.race),
+        proficiencyBonus: proficiencyBonus,
+        hitDie: hitDieString
     };
     
     return character;
@@ -419,6 +560,9 @@ function displayCharacter(character) {
     currentCharacter = character;
     const characterSheet = document.getElementById('characterSheet');
     
+    const classDisplay = character.classes && character.classes.length > 1 ? formatClassString(character.classes) : character.class;
+    const abilities = character.abilities || character.stats || { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 };
+    
     characterSheet.innerHTML = `
         <div class="character-header">
             <div class="character-avatar">
@@ -426,7 +570,7 @@ function displayCharacter(character) {
             </div>
             <div class="character-basic-info">
                 <h3>${character.name}</h3>
-                <p class="character-subtitle">Level ${character.level} ${character.race} ${character.class}</p>
+                <p class="character-subtitle">Level ${character.level} ${character.race} ${classDisplay}</p>
                 <p class="character-background">${character.background} Background</p>
             </div>
         </div>
@@ -435,34 +579,34 @@ function displayCharacter(character) {
             <h4><i class="fas fa-chart-bar"></i> Ability Scores</h4>
             <div class="stats-grid">
                 <div class="stat-block">
-                    <div class="stat-value">${character.stats.strength}</div>
+                    <div class="stat-value">${abilities.strength}</div>
                     <div class="stat-name">STR</div>
-                    <div class="stat-modifier">${getModifier(character.stats.strength)}</div>
+                    <div class="stat-modifier">${getModifier(abilities.strength)}</div>
                 </div>
                 <div class="stat-block">
-                    <div class="stat-value">${character.stats.dexterity}</div>
+                    <div class="stat-value">${abilities.dexterity}</div>
                     <div class="stat-name">DEX</div>
-                    <div class="stat-modifier">${getModifier(character.stats.dexterity)}</div>
+                    <div class="stat-modifier">${getModifier(abilities.dexterity)}</div>
                 </div>
                 <div class="stat-block">
-                    <div class="stat-value">${character.stats.constitution}</div>
+                    <div class="stat-value">${abilities.constitution}</div>
                     <div class="stat-name">CON</div>
-                    <div class="stat-modifier">${getModifier(character.stats.constitution)}</div>
+                    <div class="stat-modifier">${getModifier(abilities.constitution)}</div>
                 </div>
                 <div class="stat-block">
-                    <div class="stat-value">${character.stats.intelligence}</div>
+                    <div class="stat-value">${abilities.intelligence}</div>
                     <div class="stat-name">INT</div>
-                    <div class="stat-modifier">${getModifier(character.stats.intelligence)}</div>
+                    <div class="stat-modifier">${getModifier(abilities.intelligence)}</div>
                 </div>
                 <div class="stat-block">
-                    <div class="stat-value">${character.stats.wisdom}</div>
+                    <div class="stat-value">${abilities.wisdom}</div>
                     <div class="stat-name">WIS</div>
-                    <div class="stat-modifier">${getModifier(character.stats.wisdom)}</div>
+                    <div class="stat-modifier">${getModifier(abilities.wisdom)}</div>
                 </div>
                 <div class="stat-block">
-                    <div class="stat-value">${character.stats.charisma}</div>
+                    <div class="stat-value">${abilities.charisma}</div>
                     <div class="stat-name">CHA</div>
-                    <div class="stat-modifier">${getModifier(character.stats.charisma)}</div>
+                    <div class="stat-modifier">${getModifier(abilities.charisma)}</div>
                 </div>
             </div>
         </div>
@@ -506,7 +650,7 @@ function displayCharacter(character) {
         
         <div class="character-meta">
             <p><i class="fas fa-clock"></i> Generated: ${new Date(character.createdAt).toLocaleString()}</p>
-            <p><i class="fas fa-book"></i> Using ${character.sourceBooks.length} source book(s)</p>
+            <p><i class="fas fa-book"></i> Using ${Array.isArray(character.sourceBooks) ? character.sourceBooks.length : 0} source book(s)</p>
         </div>
     `;
 }
@@ -553,11 +697,13 @@ function updateCharacterHistory() {
         return;
     }
     
-    historyContainer.innerHTML = characterHistory.map(character => `
+    historyContainer.innerHTML = characterHistory.map(character => {
+        const classDisplay = character.classes && character.classes.length > 1 ? formatClassString(character.classes) : character.class;
+        return `
         <div class="history-character-card" onclick="loadCharacterFromHistory('${character.id}')">
             <div class="history-character-info">
                 <h4>${character.name}</h4>
-                <p>Level ${character.level} ${character.race} ${character.class}</p>
+                <p>Level ${character.level} ${character.race} ${classDisplay}</p>
                 <small>${new Date(character.createdAt).toLocaleDateString()}</small>
             </div>
             <div class="history-character-actions">
@@ -565,8 +711,8 @@ function updateCharacterHistory() {
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
 function loadCharacterFromHistory(characterId) {
@@ -652,18 +798,20 @@ function exportAsJSON() {
 }
 
 function exportAsText() {
+    const classDisplay = currentCharacter.classes && currentCharacter.classes.length > 1 ? formatClassString(currentCharacter.classes) : currentCharacter.class;
+    const abilities = currentCharacter.abilities || currentCharacter.stats || { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 };
     const textContent = `
 ${currentCharacter.name}
-Level ${currentCharacter.level} ${currentCharacter.race} ${currentCharacter.class}
+Level ${currentCharacter.level} ${currentCharacter.race} ${classDisplay}
 Background: ${currentCharacter.background}
 
 ABILITY SCORES:
-Strength: ${currentCharacter.stats.strength} (${getModifier(currentCharacter.stats.strength)})
-Dexterity: ${currentCharacter.stats.dexterity} (${getModifier(currentCharacter.stats.dexterity)})
-Constitution: ${currentCharacter.stats.constitution} (${getModifier(currentCharacter.stats.constitution)})
-Intelligence: ${currentCharacter.stats.intelligence} (${getModifier(currentCharacter.stats.intelligence)})
-Wisdom: ${currentCharacter.stats.wisdom} (${getModifier(currentCharacter.stats.wisdom)})
-Charisma: ${currentCharacter.stats.charisma} (${getModifier(currentCharacter.stats.charisma)})
+Strength: ${abilities.strength} (${getModifier(abilities.strength)})
+Dexterity: ${abilities.dexterity} (${getModifier(abilities.dexterity)})
+Constitution: ${abilities.constitution} (${getModifier(abilities.constitution)})
+Intelligence: ${abilities.intelligence} (${getModifier(abilities.intelligence)})
+Wisdom: ${abilities.wisdom} (${getModifier(abilities.wisdom)})
+Charisma: ${abilities.charisma} (${getModifier(abilities.charisma)})
 
 PERSONALITY:
 ${currentCharacter.personality}
@@ -1131,6 +1279,8 @@ function createManualCharacter() {
 }
 
 function collectManualFormData() {
+    const mcEnabled = !!(document.getElementById('enableManualMulticlass') && document.getElementById('enableManualMulticlass').checked);
+    const manualMC = mcEnabled ? readMulticlassList('manualClassList') : [];
     return {
         name: document.getElementById('manualCharacterName').value.trim(),
         race: document.getElementById('manualCharacterRace').value,
@@ -1163,6 +1313,7 @@ function collectManualFormData() {
         weight: document.getElementById('manualWeight').value,
         appearance: document.getElementById('manualAppearance').value.trim(),
         
+        multiclass: manualMC,
         creationMethod: 'manual',
         timestamp: new Date().toISOString()
     };
@@ -1195,16 +1346,24 @@ function buildManualCharacter(data) {
         charisma: Math.floor((data.abilities.charisma - 10) / 2)
     };
     
-    const proficiencyBonus = Math.ceil(data.level / 4) + 1;
-    const hitDie = getClassHitDie(data.class);
-    const hitPoints = hitDie + modifiers.constitution + ((data.level - 1) * (Math.floor(hitDie / 2) + 1 + modifiers.constitution));
+    const totalLevel = data.level;
+    const classLevels = normalizeAIMulticlass(data); // works for manual too (primary = selected class)
+    const primaryClass = pickPrimaryClass(classLevels);
+
+    const proficiencyBonus = Math.ceil(totalLevel / 4) + 1;
+    const conMod = modifiers.constitution;
+    const hitPoints = computeMulticlassHitPoints(classLevels, conMod, totalLevel);
+    const hitDieString = classLevels.length > 1
+        ? classLevels.map(cl => `${cl.levels}d${getClassHitDie(cl.class)}`).join(' + ')
+        : `1d${getClassHitDie(primaryClass)}`;
     
     return {
         id: generateId(),
         name: data.name,
         race: data.race,
-        class: data.class,
-        level: data.level,
+        class: classLevels.length > 1 ? formatClassString(classLevels) : data.class,
+        classes: classLevels,
+        level: totalLevel,
         background: data.background,
         
         abilities: data.abilities,
@@ -1215,7 +1374,7 @@ function buildManualCharacter(data) {
             armorClass: 10 + modifiers.dexterity, // Base AC, would be modified by armor
             speed: getRaceSpeed(data.race),
             proficiencyBonus: proficiencyBonus,
-            hitDie: `1d${hitDie}`
+            hitDie: hitDieString
         },
         
         skills: data.classSkills,
@@ -1236,8 +1395,8 @@ function buildManualCharacter(data) {
             appearance: data.appearance
         },
         
-        features: getRaceFeatures(data.race).concat(getClassFeatures(data.class, data.level)),
-        equipment: getStartingEquipment(data.class, data.background),
+        features: getRaceFeatures(data.race).concat(combineClassFeatures(classLevels, totalLevel)),
+        equipment: getStartingEquipment(primaryClass, data.background),
         
         creationMethod: 'manual',
         createdAt: data.timestamp
@@ -1351,6 +1510,60 @@ function getStartingEquipment(charClass, background) {
     ];
 }
 
+function addMulticlassRow(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const row = document.createElement('div');
+    row.className = 'multiclass-row';
+    row.innerHTML = `
+        <div class="form-row">
+            <div class="form-group">
+                <label>Class</label>
+                <select class="mc-class">
+                    <option value="barbarian">Barbarian</option>
+                    <option value="bard">Bard</option>
+                    <option value="cleric">Cleric</option>
+                    <option value="druid">Druid</option>
+                    <option value="fighter">Fighter</option>
+                    <option value="monk">Monk</option>
+                    <option value="paladin">Paladin</option>
+                    <option value="ranger">Ranger</option>
+                    <option value="rogue">Rogue</option>
+                    <option value="sorcerer">Sorcerer</option>
+                    <option value="warlock">Warlock</option>
+                    <option value="wizard">Wizard</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Levels</label>
+                <input type="number" class="mc-levels" min="1" max="20" value="1">
+            </div>
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <button type="button" class="btn btn-outline btn-sm remove-mc">Remove</button>
+            </div>
+        </div>
+    `;
+
+    row.querySelector('.remove-mc').addEventListener('click', () => row.remove());
+    container.appendChild(row);
+}
+
+function readMulticlassList(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return [];
+    const rows = Array.from(container.querySelectorAll('.multiclass-row'));
+    return rows.map(row => {
+        const classSel = row.querySelector('.mc-class');
+        const lvlInput = row.querySelector('.mc-levels');
+        return {
+            class: classSel ? classSel.value : '',
+            levels: lvlInput ? parseInt(lvlInput.value) || 0 : 0
+        };
+    }).filter(entry => entry.class && entry.levels > 0);
+}
+
 // ===== PDF GENERATION FUNCTIONS =====
 
 function generateStandardCharacterSheet(doc) {
@@ -1369,7 +1582,8 @@ function generateStandardCharacterSheet(doc) {
     
     doc.setFontSize(12);
     doc.setFont(undefined, 'normal');
-    const basicInfo = `Level ${char.level || 1} ${char.race || 'Unknown'} ${char.class || 'Unknown'}`;
+    const classDisplay = char.classes && char.classes.length > 1 ? formatClassString(char.classes) : char.class;
+    const basicInfo = `Level ${char.level || 1} ${char.race || 'Unknown'} ${classDisplay || 'Unknown'}`;
     doc.text(basicInfo, pageWidth / 2, 45, { align: 'center' });
     
     if (char.background) {
