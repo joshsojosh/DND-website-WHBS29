@@ -16,7 +16,8 @@ function generateSpellSheet(doc) {
     
     doc.setFontSize(12);
     doc.setFont(undefined, 'normal');
-    const basicInfo = `Level ${char.level || 1} ${char.class || 'Unknown'}`;
+    const classDisplay = (char.classes && char.classes.length > 1 ? formatClassString(char.classes) : char.class) || 'Unknown';
+    const basicInfo = `Level ${char.level || 1} ${classDisplay || 'Unknown'}`;
     doc.text(basicInfo, pageWidth / 2, 45, { align: 'center' });
     
     // Spellcasting Info
@@ -30,7 +31,8 @@ function generateSpellSheet(doc) {
     doc.setFont(undefined, 'normal');
     
     // Spell slots by level (basic calculation)
-    const spellSlots = calculateSpellSlots(char.class, char.level || 1);
+    const primaryClass = (char.classes && char.classes.length > 0) ? char.classes.sort((a,b)=>b.levels-a.levels)[0].class : char.class;
+    const spellSlots = calculateSpellSlots(primaryClass, char.level || 1);
     
     doc.text('Spell Slots:', 20, yPos);
     yPos += 10;
@@ -44,7 +46,7 @@ function generateSpellSheet(doc) {
     
     // Spellcasting Ability
     yPos += 10;
-    const spellcastingAbility = getSpellcastingAbility(char.class);
+    const spellcastingAbility = getSpellcastingAbility(primaryClass);
     if (spellcastingAbility) {
         const abilityScore = char.abilities?.[spellcastingAbility] || char.stats?.[spellcastingAbility] || 10;
         const modifier = Math.floor((abilityScore - 10) / 2);
@@ -128,7 +130,8 @@ function generateCompactSheet(doc) {
     
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
-    const basicInfo = `Level ${char.level || 1} ${char.race || 'Unknown'} ${char.class || 'Unknown'}`;
+    const classDisplay = (char.classes && char.classes.length > 1 ? formatClassString(char.classes) : char.class) || 'Unknown';
+    const basicInfo = `Level ${char.level || 1} ${char.race || 'Unknown'} ${classDisplay || 'Unknown'}`;
     doc.text(basicInfo, pageWidth / 2, 35, { align: 'center' });
     
     if (char.background) {
