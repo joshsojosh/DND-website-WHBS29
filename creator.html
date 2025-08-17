@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Character - Character Creator</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Character Creator</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="creator.html" class="active">Create Character</a></li>
+                    <li><a href="gallery.html">Character Gallery</a></li>
+                    <li><a href="about.html">About</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="creator-container">
+            <div class="options-panel">
+                <h2>Character Options</h2>
+                <form id="character-form">
+                    <!-- Basic Information -->
+                    <div class="option-group">
+                        <h3>Basic Information</h3>
+                        <div class="form-group">
+                            <label for="character-name">Character Name</label>
+                            <input type="text" id="character-name" name="character-name" placeholder="Enter character name">
+                        </div>
+                        <div class="form-group">
+                            <label for="character-race">Race</label>
+                            <select id="character-race" name="character-race">
+                                <option value="">Select Race</option>
+                                <option value="Human">Human</option>
+                                <option value="Elf">Elf</option>
+                                <option value="Dwarf">Dwarf</option>
+                                <option value="Halfling">Halfling</option>
+                                <option value="Gnome">Gnome</option>
+                                <option value="Half-Elf">Half-Elf</option>
+                                <option value="Half-Orc">Half-Orc</option>
+                                <option value="Tiefling">Tiefling</option>
+                                <option value="Dragonborn">Dragonborn</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="character-gender">Gender</label>
+                            <select id="character-gender" name="character-gender">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Non-Binary">Non-Binary</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Class Selection with Multi-classing -->
+                    <div class="option-group">
+                        <h3>Classes</h3>
+                        <p>Total level: <span id="total-level">0</span>/20</p>
+                        <div id="classes-container">
+                            <div class="class-row" data-index="0">
+                                <div class="form-group class-select">
+                                    <select class="character-class" name="character-class-0">
+                                        <option value="">Select Class</option>
+                                        <option value="Artificer">Artificer</option>
+                                        <option value="Barbarian">Barbarian</option>
+                                        <option value="Bard">Bard</option>
+                                        <option value="Cleric">Cleric</option>
+                                        <option value="Druid">Druid</option>
+                                        <option value="Fighter">Fighter</option>
+                                        <option value="Monk">Monk</option>
+                                        <option value="Paladin">Paladin</option>
+                                        <option value="Ranger">Ranger</option>
+                                        <option value="Rogue">Rogue</option>
+                                        <option value="Sorcerer">Sorcerer</option>
+                                        <option value="Warlock">Warlock</option>
+                                        <option value="Wizard">Wizard</option>
+                                    </select>
+                                </div>
+                                <div class="form-group level-select">
+                                    <input type="number" class="class-level" name="class-level-0" min="1" max="20" value="1" disabled>
+                                </div>
+                                <button type="button" class="remove-class-btn" disabled>
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" id="add-class-btn" class="btn btn-small">Add Another Class</button>
+                    </div>
+
+                    <!-- Attributes -->
+                    <div class="option-group">
+                        <h3>Attributes</h3>
+                        <div class="form-group">
+                            <label for="stat-strength">Strength</label>
+                            <input type="range" id="stat-strength" name="stat-strength" min="3" max="18" value="10">
+                            <span class="stat-value" id="strength-value">10</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="stat-dexterity">Dexterity</label>
+                            <input type="range" id="stat-dexterity" name="stat-dexterity" min="3" max="18" value="10">
+                            <span class="stat-value" id="dexterity-value">10</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="stat-constitution">Constitution</label>
+                            <input type="range" id="stat-constitution" name="stat-constitution" min="3" max="18" value="10">
+                            <span class="stat-value" id="constitution-value">10</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="stat-intelligence">Intelligence</label>
+                            <input type="range" id="stat-intelligence" name="stat-intelligence" min="3" max="18" value="10">
+                            <span class="stat-value" id="intelligence-value">10</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="stat-wisdom">Wisdom</label>
+                            <input type="range" id="stat-wisdom" name="stat-wisdom" min="3" max="18" value="10">
+                            <span class="stat-value" id="wisdom-value">10</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="stat-charisma">Charisma</label>
+                            <input type="range" id="stat-charisma" name="stat-charisma" min="3" max="18" value="10">
+                            <span class="stat-value" id="charisma-value">10</span>
+                        </div>
+                    </div>
+
+                    <!-- Appearance -->
+                    <div class="option-group">
+                        <h3>Appearance</h3>
+                        <div class="form-group">
+                            <label for="hair-color">Hair Color</label>
+                            <input type="hidden" id="hair-color" name="hair-color" value="#000000">
+                            <div class="color-picker" data-target="hair-color">
+                                <div class="color-option selected" data-color="#000000" style="background-color: #000000;"></div>
+                                <div class="color-option" data-color="#8B4513" style="background-color: #8B4513;"></div>
+                                <div class="color-option" data-color="#A52A2A" style="background-color: #A52A2A;"></div>
+                                <div class="color-option" data-color="#D2691E" style="background-color: #D2691E;"></div>
+                                <div class="color-option" data-color="#CD853F" style="background-color: #CD853F;"></div>
+                                <div class="color-option" data-color="#FFD700" style="background-color: #FFD700;"></div>
+                                <div class="color-option" data-color="#FFFFFF" style="background-color: #FFFFFF;"></div>
+                                <div class="color-option" data-color="#C0C0C0" style="background-color: #C0C0C0;"></div>
+                                <div class="color-option" data-color="#808080" style="background-color: #808080;"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="eye-color">Eye Color</label>
+                            <input type="hidden" id="eye-color" name="eye-color" value="#000000">
+                            <div class="color-picker" data-target="eye-color">
+                                <div class="color-option selected" data-color="#000000" style="background-color: #000000;"></div>
+                                <div class="color-option" data-color="#8B4513" style="background-color: #8B4513;"></div>
+                                <div class="color-option" data-color="#A52A2A" style="background-color: #A52A2A;"></div>
+                                <div class="color-option" data-color="#1E90FF" style="background-color: #1E90FF;"></div>
+                                <div class="color-option" data-color="#008000" style="background-color: #008000;"></div>
+                                <div class="color-option" data-color="#800080" style="background-color: #800080;"></div>
+                                <div class="color-option" data-color="#FFD700" style="background-color: #FFD700;"></div>
+                                <div class="color-option" data-color="#808080" style="background-color: #808080;"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="skin-tone">Skin Tone</label>
+                            <input type="hidden" id="skin-tone" name="skin-tone" value="#F5D0A9">
+                            <div class="color-picker" data-target="skin-tone">
+                                <div class="color-option" data-color="#FFFFFF" style="background-color: #FFFFFF;"></div>
+                                <div class="color-option" data-color="#FFDBAC" style="background-color: #FFDBAC;"></div>
+                                <div class="color-option selected" data-color="#F5D0A9" style="background-color: #F5D0A9;"></div>
+                                <div class="color-option" data-color="#D2B48C" style="background-color: #D2B48C;"></div>
+                                <div class="color-option" data-color="#C19A6B" style="background-color: #C19A6B;"></div>
+                                <div class="color-option" data-color="#A0522D" style="background-color: #A0522D;"></div>
+                                <div class="color-option" data-color="#8B4513" style="background-color: #8B4513;"></div>
+                                <div class="color-option" data-color="#654321" style="background-color: #654321;"></div>
+                                <div class="color-option" data-color="#3B2F2F" style="background-color: #3B2F2F;"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="character-height">Height (cm)</label>
+                            <input type="number" id="character-height" name="character-height" min="100" max="250" value="170">
+                        </div>
+                        <div class="form-group">
+                            <label for="character-weight">Weight (kg)</label>
+                            <input type="number" id="character-weight" name="character-weight" min="30" max="200" value="70">
+                        </div>
+                    </div>
+
+                    <!-- Background -->
+                    <div class="option-group">
+                        <h3>Background</h3>
+                        <div class="form-group">
+                            <label for="character-background">Character Background</label>
+                            <select id="character-background" name="character-background">
+                                <option value="">Select Background</option>
+                                <option value="Acolyte">Acolyte</option>
+                                <option value="Charlatan">Charlatan</option>
+                                <option value="Criminal">Criminal</option>
+                                <option value="Entertainer">Entertainer</option>
+                                <option value="Folk Hero">Folk Hero</option>
+                                <option value="Guild Artisan">Guild Artisan</option>
+                                <option value="Hermit">Hermit</option>
+                                <option value="Noble">Noble</option>
+                                <option value="Outlander">Outlander</option>
+                                <option value="Sage">Sage</option>
+                                <option value="Sailor">Sailor</option>
+                                <option value="Soldier">Soldier</option>
+                                <option value="Urchin">Urchin</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="character-story">Character Story</label>
+                            <textarea id="character-story" name="character-story" rows="4" placeholder="Write your character's backstory..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="preview-panel">
+                <h2>Character Preview</h2>
+                <div class="character-preview">
+                    <!-- Character preview will be rendered here -->
+                </div>
+                <div class="character-stats">
+                    <!-- Character stats will be rendered here -->
+                </div>
+                <div class="class-summary">
+                    <!-- Class summary will be rendered here -->
+                </div>
+                <div class="action-buttons">
+                    <button id="save-character" class="btn">Save Character</button>
+                    <button id="reset-character" class="btn">Reset</button>
+                    <button id="export-character" class="btn">Export</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Character Creator. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/character-creator.js"></script>
+</body>
+</html>
+

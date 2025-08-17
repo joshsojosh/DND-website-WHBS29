@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Gallery - Character Creator</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Character Creator</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="creator.html">Create Character</a></li>
+                    <li><a href="gallery.html" class="active">Character Gallery</a></li>
+                    <li><a href="about.html">About</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="gallery-section">
+        <div class="container">
+            <h2>Character Gallery</h2>
+            <p>View and manage your saved characters.</p>
+            
+            <div class="gallery-grid" id="gallery-grid">
+                <!-- Characters will be loaded here dynamically -->
+                <p class="loading-message">Loading characters...</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Character Creator. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/gallery.js"></script>
+</body>
+</html>
+
